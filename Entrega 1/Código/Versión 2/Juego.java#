@@ -1,0 +1,126 @@
+/**
+ * Esta clase permite la interacción del juego con el usuario
+ * @author Dayana Arrieta & Juan José Quintana
+ */
+
+import java.util.Scanner;
+public class Juego {
+    /**
+     * contador de turnos llevados en el juego
+     */
+    int counter = 0;
+    /**
+     * El número de puntos iniciales de vida del pacman
+     */
+    public static int PUNTOS_VIDA_INICIALES = 10;
+    /**
+     * tablero del laberinto
+     */
+    Tablero board = new Tablero();
+     /**
+     * pacman del puzzle
+     */
+    Pacman pacman = board.getPacman();
+    private static final String UP = "w";
+    private static final String DOWN = "s";
+    private static final String LEFT = "a";
+    private static final String RIGHT = "d";
+    private static final String QUIT = "q";
+    /**
+     * Constructor vacío
+     */
+    public Juego() {
+    }
+
+    /**
+     * Interacción con el usuario
+     */
+    public void jugar() {
+        boolean wonGame = false;
+        board.dibujarTablero();
+        Scanner systemInput = new Scanner(System.in);
+        String userInput = systemInput.nextLine();
+        while (!userInput.equals(QUIT) && !wonGame) {
+            int pacmanRow = pacman.posicion.fila;
+            int pacmanColumn = pacman.posicion.col;
+            int newRow = pacmanRow;
+            int newColumn = pacmanColumn;
+            switch (userInput) {
+                case UP:
+                newRow = pacmanRow - 1;
+                break;
+                case DOWN:
+                newRow = pacmanRow + 1;
+                break;
+                case LEFT:
+                newColumn = pacmanColumn - 1;
+                break;
+                case RIGHT:
+                newColumn = pacmanColumn + 1;
+                break;
+
+            }
+            counter++;
+            if (counter == 10) {
+                counter = 0;
+                pacman.reduceLifePoints(1);
+            }
+
+
+            if (cellIsValid(newRow, newColumn)) {
+                Celda previousCell = board.cellMatrix[pacmanRow][pacmanColumn];
+                Celda newCell = board.cellMatrix[newRow][newColumn];
+                newCell.caracter = pacman;
+                previousCell.caracter = null;
+                pacman.posicion = new Posicion(newRow, newColumn);
+                if(board.cellHasArepita(newRow,newColumn)){
+                    if(board.cellHasBadArepita(newRow, newColumn)){
+                        pacman.reduceLifePoints(5);
+                    }
+                    else {
+                        pacman.increasesLifePoints();
+                    }
+
+                    if(pacman.getLifePoints() <= 0){
+                        break;
+
+                    }
+                    board.removeArepitaFromCell(newRow, newColumn);
+                }
+                if(board.cellIsOutput(newRow, newColumn)){
+
+                    wonGame = true;
+                    board.dibujarTablero();
+                    break;
+                }
+
+            }
+            System.out.println("Puntos de vida: " + pacman.getLifePoints());
+            board.dibujarTablero();
+            userInput = systemInput.nextLine();
+        }
+        if (wonGame) {
+            System.out.println("Has ganado el juego, ¡felicitaciones!");
+        }
+        System.out.println("Fin del juego");
+    }
+
+    /**
+     * En este metodo se debe chequear las siguientes condiciones:
+     * (i) Que el usuario no se salga de las filas del tablero
+     * (ii) Que el usuario no se salga de las columnas del tablero
+     * (iii) Que la posición no sea un muro
+     * (iv) Que no haya un caracter en esa posición
+     *
+     * @param newRow    Fila hacia donde se quiere mover el usuario
+     * @param newColumn Columna hacia donde se quiere mover el usuario
+     * @return true si es una jugada válida, false de lo contrario
+     */
+    private boolean cellIsValid(int newRow, int newColumn) {
+        return (
+            !board.cellIsWall(newRow, newColumn) &&
+            !board.cellHasCharacter(newRow, newColumn)
+        );
+    }
+
+}
